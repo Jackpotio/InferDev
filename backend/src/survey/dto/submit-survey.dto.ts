@@ -1,10 +1,12 @@
-export interface SubmitSurveyDto {
-  major: string;
-  codingExp: string;
-  //scores는 추후 추가 예정.
-  scores: {
-    frontend: number;
-    backend: number;
-    ai: number;
-  };
+export class SubmitSurveyDto {
+  major: 'it' | 'non-it';
+  itMajorDetail?: string;
+
+  codingExp: 'yes' | 'no';
+  codingLevel?: string;
+
+  answer: {
+    questionId: number;
+    optionIndex: number;
+  }[];
 }
