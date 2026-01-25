@@ -7,15 +7,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class ScoreDto {
-  @IsNumber()
-  frontend: number;
-  @IsNumber()
-  backend: number;
-  @IsNumber()
-  ai: number;
-}
-
 class AnswerDto {
   @IsNumber()
   questionId: number;
@@ -38,8 +29,7 @@ export class SubmitSurveyDto {
   @ValidateNested()
   @Type(() => AnswerDto)
   answer: AnswerDto[];
-
-  @ValidateNested()
-  @Type(() => ScoreDto)
-  scores: ScoreDto;
+/*key: 테마명 value: 점수*/
+  @IsObject()
+  scores: Record<string, number>;
 }

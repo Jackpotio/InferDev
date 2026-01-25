@@ -1,43 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { SubmitSurveyDto } from './dto/submit-survey.dto';
-import { maxDate } from 'class-validator';
 
 @Injectable()
 export class SurveyService {
   submitSurvey(dto: SubmitSurveyDto) {
-    console.log('설문 결과 수신: ', dto);
     const { scores } = dto;
-    const result = this.calculateResult(scores);
+
+    const rankedThemes = this.buildRankedThemes(scores);
+    const { topTheme, maxScore } = this.extractMaxScore(rankedThemes);
 
     return {
       success: true,
-      result,
+      result: {
+        rankedThemes,
+        topTheme,
+        maxScore,
+      },
     };
   }
 
-  /*ScoreDto 기반 설문 결과 계산 */
-  private calculateResult(scores: {
-    frontend: number;
-    backend: number;
-    ai: number;
-  }): 'frontend' | 'backend' | 'ai' {
-    let maxScore = -Infinity;
-    let selectedField: 'frontend' | 'backend' | 'ai' = 'frontend';
+  /* scores 객체를 점수 기준 내림차순으로 정렬 */
+  private buildRankedThemes(
+    scores: Record<string, number>,
+  ): { theme: string; score: number }[] {
+    return Object.entries(scores)
+      .map(([theme, score]) => ({ theme, score }))
+      .sort((a, b) => b.score - a.score);
+  }
 
-    if (scores.frontend > maxScore) {
-      maxScore = scores.frontend;
-      selectedField = 'frontend';
-    }
-
-    if (scores.backend > maxScore) {
-      maxScore = scores.backend;
-      selectedField = 'backend';
-    }
-
-    if (scores.ai > maxScore) {
-      maxScore = scores.ai;
-      selectedField = 'ai';
-    }
-    return selectedField;
+  /*랭킹 결과에서 최고 점수 및 대표 테마 추출 */
+  private extractMaxScore(rankedThemes: { theme: string; score: number }[]): {
+    topTheme: string;
+    maxScore: number;
+  } {
+    const top = rankedThemes[0];
+    return {
+      topTheme: top.theme,
+      maxScore: top.score,
+    };
   }
 }
