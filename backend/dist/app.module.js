@@ -16,24 +16,30 @@ const survey_question_entity_1 = require("./survey/entities/survey-question.enti
 const survey_option_entity_1 = require("./survey/entities/survey-option.entity");
 const survey_result_entity_1 = require("./survey/entities/survey-result.entity");
 const submitted_answer_entity_1 = require("./survey/entities/submitted-answer.entity");
+const config_1 = require("@nestjs/config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forRoot({
-                type: 'postgres',
-                host: 'dpg-cq922j56l47c73e185c0-a.singapore-postgres.render.com',
-                port: 5432,
-                username: 'test_user',
-                password: 'zLpL9yXo4wUnSAn4x4yZ0wY5fNBrxJj7',
-                database: 'test_db_axze',
-                entities: [job_entity_1.Job, job_detail_entity_1.JobDetail, survey_question_entity_1.SurveyQuestion, survey_option_entity_1.SurveyOption, survey_result_entity_1.SurveyResult, submitted_answer_entity_1.SubmittedAnswer],
-                synchronize: true,
-                ssl: {
-                    rejectUnauthorized: false,
-                },
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            typeorm_1.TypeOrmModule.forRootAsync({
+                imports: [config_1.ConfigModule],
+                inject: [config_1.ConfigService],
+                useFactory: (configService) => ({
+                    type: 'postgres',
+                    host: configService.get('DB_HOST'),
+                    port: configService.get('DB_PORT'),
+                    username: configService.get('DB_USERNAME'),
+                    password: configService.get('DB_PASSWORD'),
+                    database: configService.get('DB_DATABASE'),
+                    entities: [job_entity_1.Job, job_detail_entity_1.JobDetail, survey_question_entity_1.SurveyQuestion, survey_option_entity_1.SurveyOption, survey_result_entity_1.SurveyResult, submitted_answer_entity_1.SubmittedAnswer],
+                    synchronize: true,
+                    ssl: {
+                        rejectUnauthorized: false,
+                    },
+                }),
             }),
             survey_module_1.SurveyModule,
         ],

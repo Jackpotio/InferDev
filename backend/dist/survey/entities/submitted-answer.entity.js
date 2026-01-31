@@ -13,6 +13,7 @@ exports.SubmittedAnswer = void 0;
 const typeorm_1 = require("typeorm");
 const survey_result_entity_1 = require("./survey-result.entity");
 const survey_option_entity_1 = require("./survey-option.entity");
+const survey_question_entity_1 = require("./survey-question.entity");
 let SubmittedAnswer = class SubmittedAnswer {
 };
 exports.SubmittedAnswer = SubmittedAnswer;
@@ -24,6 +25,10 @@ __decorate([
     (0, typeorm_1.ManyToOne)(() => survey_result_entity_1.SurveyResult, surveyResult => surveyResult.submittedAnswers),
     __metadata("design:type", survey_result_entity_1.SurveyResult)
 ], SubmittedAnswer.prototype, "surveyResult", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => survey_question_entity_1.SurveyQuestion),
+    __metadata("design:type", survey_question_entity_1.SurveyQuestion)
+], SubmittedAnswer.prototype, "surveyQuestion", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => survey_option_entity_1.SurveyOption),
     __metadata("design:type", survey_option_entity_1.SurveyOption)

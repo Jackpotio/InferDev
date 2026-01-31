@@ -1,5 +1,5 @@
 
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
 import { SubmittedAnswer } from './submitted-answer.entity';
 
 @Entity()
@@ -7,21 +7,18 @@ export class SurveyResult {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  topJob: string;
+  @Column({ nullable: true })
+  userId: number;
 
   @Column()
-  topSubfield: string;
+  totalScore: number;
 
-  @Column('jsonb')
-  scores: Record<string, number>;
+  @Column()
+  resultSummary: string;
 
-  @Column('jsonb')
-  subfieldScores: Record<string, number>;
+  @CreateDateColumn()
+  submittedAt: Date;
 
   @OneToMany(() => SubmittedAnswer, submittedAnswer => submittedAnswer.surveyResult, { cascade: true })
   submittedAnswers: SubmittedAnswer[];
-
-  @CreateDateColumn()
-  createdAt: Date;
 }

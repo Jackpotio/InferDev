@@ -11,44 +11,29 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SubmitSurveyDto = void 0;
 const class_validator_1 = require("class-validator");
-const class_transformer_1 = require("class-transformer");
-class Answer {
+class AnswerDto {
 }
 __decorate([
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
-], Answer.prototype, "questionId", void 0);
+], AnswerDto.prototype, "questionId", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
-], Answer.prototype, "optionId", void 0);
+], AnswerDto.prototype, "optionId", void 0);
 class SubmitSurveyDto {
 }
 exports.SubmitSurveyDto = SubmitSurveyDto;
 __decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], SubmitSurveyDto.prototype, "userId", void 0);
+__decorate([
     (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.ValidateNested)({ each: true }),
-    (0, class_transformer_1.Type)(() => Answer),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Array)
 ], SubmitSurveyDto.prototype, "answers", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['it', 'non-it']),
-    __metadata("design:type", String)
-], SubmitSurveyDto.prototype, "major", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], SubmitSurveyDto.prototype, "itMajorDetail", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['yes', 'no']),
-    __metadata("design:type", String)
-], SubmitSurveyDto.prototype, "codingExp", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], SubmitSurveyDto.prototype, "codingLevel", void 0);
 //# sourceMappingURL=submit-survey.dto.js.map

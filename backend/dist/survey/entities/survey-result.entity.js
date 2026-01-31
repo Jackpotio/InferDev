@@ -20,29 +20,25 @@ __decorate([
     __metadata("design:type", Number)
 ], SurveyResult.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], SurveyResult.prototype, "topJob", void 0);
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], SurveyResult.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], SurveyResult.prototype, "totalScore", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], SurveyResult.prototype, "topSubfield", void 0);
+], SurveyResult.prototype, "resultSummary", void 0);
 __decorate([
-    (0, typeorm_1.Column)('jsonb'),
-    __metadata("design:type", Object)
-], SurveyResult.prototype, "scores", void 0);
-__decorate([
-    (0, typeorm_1.Column)('jsonb'),
-    __metadata("design:type", Object)
-], SurveyResult.prototype, "subfieldScores", void 0);
+    (0, typeorm_1.CreateDateColumn)(),
+    __metadata("design:type", Date)
+], SurveyResult.prototype, "submittedAt", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => submitted_answer_entity_1.SubmittedAnswer, submittedAnswer => submittedAnswer.surveyResult, { cascade: true }),
     __metadata("design:type", Array)
 ], SurveyResult.prototype, "submittedAnswers", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
-    __metadata("design:type", Date)
-], SurveyResult.prototype, "createdAt", void 0);
 exports.SurveyResult = SurveyResult = __decorate([
     (0, typeorm_1.Entity)()
 ], SurveyResult);

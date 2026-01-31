@@ -1,10 +1,9 @@
 import { SubmittedAnswer } from './submitted-answer.entity';
 export declare class SurveyResult {
     id: number;
-    topJob: string;
-    topSubfield: string;
-    scores: Record<string, number>;
-    subfieldScores: Record<string, number>;
+    userId: number;
+    totalScore: number;
+    resultSummary: string;
+    submittedAt: Date;
     submittedAnswers: SubmittedAnswer[];
-    createdAt: Date;
 }

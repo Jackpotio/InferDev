@@ -1,35 +1,70 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
+import { SurveyResult } from './entities/survey-result.entity';
+import { SubmittedAnswer } from './entities/submitted-answer.entity';
+import { SubmitSurveyDto } from './dto/submit-survey.dto';
+import { SurveyQuestion } from './entities/survey-question.entity';
+import { SurveyOption } from './entities/survey-option.entity';
 import { Job } from './entities/job.entity';
 import { JobDetail } from './entities/job-detail.entity';
-import { SurveyOption } from './entities/survey-option.entity';
-import { SurveyQuestion } from './entities/survey-question.entity';
-import { SurveyResult } from './entities/survey-result.entity';
 
 @Injectable()
 export class SurveyRepository {
   constructor(
+    @InjectRepository(SurveyResult)
+    private readonly surveyResultRepository: Repository<SurveyResult>,
+    @InjectRepository(SubmittedAnswer)
+    private readonly submittedAnswerRepository: Repository<SubmittedAnswer>,
+    @InjectRepository(SurveyQuestion)
+    private readonly surveyQuestionRepository: Repository<SurveyQuestion>,
+    @InjectRepository(SurveyOption)
+    private readonly surveyOptionRepository: Repository<SurveyOption>,
     @InjectRepository(Job)
     private readonly jobRepository: Repository<Job>,
     @InjectRepository(JobDetail)
     private readonly jobDetailRepository: Repository<JobDetail>,
-    @InjectRepository(SurveyOption)
-    private readonly surveyOptionRepository: Repository<SurveyOption>,
-    @InjectRepository(SurveyQuestion)
-    private readonly surveyQuestionRepository: Repository<SurveyQuestion>,
-    @InjectRepository(SurveyResult)
-    private readonly surveyResultRepository: Repository<SurveyResult>,
   ) {}
 
-  // 기본 데이터 조회
-  async findAllJobs(): Promise<Job[]> {
-    return this.jobRepository.find();
+  async submitSurvey(submitSurveyDto: SubmitSurveyDto): Promise<SurveyResult> {
+    const { userId, answers } = submitSurveyDto;
+
+    let totalScore = 0;
+    const submittedAnswers: SubmittedAnswer[] = [];
+
+    for (const answer of answers) {
+      const { questionId, optionId } = answer;
+      const question = await this.surveyQuestionRepository.findOne({ where: { id: questionId } });
+      const option = await this.surveyOptionRepository.findOne({ where: { id: optionId } });
+
+      if (question && option) {
+        const newSubmittedAnswer = this.submittedAnswerRepository.create({
+          surveyQuestion: question,
+          surveyOption: option,
+        });
+        submittedAnswers.push(newSubmittedAnswer);
+
+        for (const key in option.score) {
+          if (Object.prototype.hasOwnProperty.call(option.score, key)) {
+            totalScore += option.score[key];
+          }
+        }
+      }
+    }
+
+    const newSurveyResult = this.surveyResultRepository.create({
+      userId,
+      totalScore,
+      resultSummary: ' ',
+      submittedAnswers,
+    });
+
+    return this.surveyResultRepository.save(newSurveyResult);
   }
 
-  async findJobById(id: string): Promise<Job> {
-    return this.jobRepository.findOne({ where: { id } });
+  async findAllJobs(): Promise<Job[]> {
+    return this.jobRepository.find();
   }
 
   async findAllJobDetails(): Promise<JobDetail[]> {
@@ -38,15 +73,5 @@ export class SurveyRepository {
 
   async findAllSurveyQuestions(): Promise<SurveyQuestion[]> {
     return this.surveyQuestionRepository.find({ relations: ['options'] });
-  }
-
-  // 답변 관련 조회
-  async findOptionsByIds(ids: number[]): Promise<SurveyOption[]> {
-    return this.surveyOptionRepository.find({ where: { id: In(ids) } });
-  }
-
-  // 결과 저장
-  async saveSurveyResult(result: SurveyResult): Promise<SurveyResult> {
-    return this.surveyResultRepository.save(result);
   }
 }
