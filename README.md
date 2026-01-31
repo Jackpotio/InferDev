@@ -1,159 +1,137 @@
-# Survey Backend (NestJS)
+# InferDev Backend (NestJS)
 
-## 1. 프로젝트 개요
-
-이 프로젝트는 **설문 기반 진로/역량 분석 서비스의 백엔드**를 목표로 한다.
-프론트엔드(React)에서 수집된 설문 데이터를 API를 통해 전달받아, 검증·가공·저장·분석하는 역할을 담당한다.
-
-본 백엔드는 단기적으로는 단순 설문 수집 API를 제공하지만,
-중장기적으로는 **점수 계산 로직, 추천 알고리즘, 사용자 이력 관리**까지 확장 가능한 구조를 전제로 설계된다.
+IT 진로 적성검사 서비스 **InferDev**의 백엔드 서버입니다.
+설문 데이터 제공, 사용자 응답 수집, 진로 추천 결과 계산을 담당합니다.
 
 ---
 
-## 2. 기술 스택 및 선택 이유
+## 1. 현재 개발 상태 요약
 
-### Core Runtime
-
-* **Node.js**
-
-  * 프론트엔드(React)와 언어 생태계 공유
-  * 비동기 I/O 기반으로 API 서버에 적합
-
-### Framework
-
-* **NestJS**
-
-  * Express/Fastify 위에서 동작하는 구조적 프레임워크
-  * Controller / Service / Module 분리로 확장성과 유지보수성 확보
-  * DTO + ValidationPipe를 통한 입력값 검증 내장
-
-> 내부적으로는 Express를 사용하지만, 필요 시 Fastify로 교체 가능하도록 설계한다.
-
-### Language
-
-* **TypeScript**
-
-  * API 계약의 명확성
-  * DTO, 인터페이스 기반 타입 안정성
-  * 프론트엔드와 타입 개념 공유 가능
-
-### Validation
-
-* **class-validator / class-transformer**
-
-  * 런타임 입력 검증
-  * 잘못된 요청을 초기에 차단하여 로직 복잡도 감소
+✅ NestJS 기본 구조 구성 완료
+✅ PostgreSQL Entity 설계 완료
+✅ 설문/직무/옵션 조회 API 구현 완료
+⚠️ 추천(점수 계산) 로직은 **미구현 (Mock 단계)**
 
 ---
 
-## 3. 아키텍처 방향성
+## 2. 기술 스택
 
-본 프로젝트는 다음 원칙을 따른다.
-
-1. **Controller는 얇게**
-
-   * 요청 수신 및 응답 반환만 담당
-
-2. **Service에 비즈니스 로직 집중**
-
-   * 점수 계산, 설문 해석, 추천 로직 등
-
-3. **DTO는 API 계약서 역할**
-
-   * 프론트엔드와의 약속
-   * README의 API 명세와 항상 동기화
-
-4. **기술 교체 가능성 고려**
-
-   * Express → Fastify
-   * REST API → GraphQL
-   * In-memory → DB (MongoDB / PostgreSQL)
+* NestJS
+* TypeScript
+* PostgreSQL
+* TypeORM (Repository 패턴)
+* class-validator / class-transformer
 
 ---
 
-## 4. 디렉토리 구조 (현재 기준)
+## 3. 프로젝트 구조
 
 ```
-backend/
-├─ src/
-│  ├─ app.module.ts
-│  ├─ main.ts
-│  └─ survey/
-│     ├─ survey.controller.ts
-│     ├─ survey.service.ts
-│     └─ dto/
-│        └─ submit-survey.dto.ts
-├─ package.json
-└─ README.md
+src/
+ ├─ app.module.ts
+ ├─ main.ts
+ ├─ survey/
+ │  ├─ survey.controller.ts   # API 엔드포인트
+ │  ├─ survey.service.ts      # 비즈니스 로직 (추천 로직 예정)
+ │  ├─ survey.repository.ts   # DB 접근 계층
+ │  ├─ dto/
+ │  │  └─ submit-survey.dto.ts
+ │  └─ entities/
+ │     ├─ job.entity.ts
+ │     ├─ job-detail.entity.ts
+ │     ├─ survey-question.entity.ts
+ │     ├─ survey-option.entity.ts
+ │     ├─ submitted-answer.entity.ts
+ │     └─ survey-result.entity.ts
 ```
 
 ---
 
-## 5. API 설계 철학
+## 4. Entity 설계 현황
 
-* RESTful API를 기본으로 한다.
-* 하나의 요청은 하나의 책임만 가진다.
-* 모든 입력은 DTO로 검증한다.
-* 실패는 명확한 HTTP Status Code로 반환한다.
+### Job
 
-### 예시 API
+* IT 직무(Frontend, Backend, AI 등)를 표현
 
-#### POST /survey/submit
+### JobDetail
 
-설문 결과 제출
+* 직무 상세 설명, 이미지, 유사 직무 정보
 
-```json
-{
-  "major": "it",
-  "codingExp": "yes",
-  "scores": {
-    "frontend": 3,
-    "backend": 2,
-    "ai": 1
-  }
-}
+### SurveyQuestion
+
+* 설문 질문
+* 조건부 질문(전공, 경험 등)을 고려한 확장 구조
+
+### SurveyOption
+
+* 질문에 대한 선택지
+* 향후 점수 매핑 예정
+
+### SubmittedAnswer
+
+* 사용자의 질문-선택지 응답 기록
+
+### SurveyResult
+
+* 최종 추천 결과 저장용 (확장 대비)
+
+---
+
+## 5. API 엔드포인트
+
+### 조회 API
+
+| Method | Endpoint          | Description |
+| ------ | ----------------- | ----------- |
+| GET    | /jobs             | 직무 목록 조회    |
+| GET    | /job-details      | 직무 상세 정보 조회 |
+| GET    | /survey-questions | 설문 질문 조회    |
+
+### 추천 API
+
+| Method | Endpoint        | Description         |
+| ------ | --------------- | ------------------- |
+| POST   | /recommendation | 설문 응답 제출 및 추천 결과 반환 |
+
+⚠️ 현재 `/recommendation` 은 **mock 문자열만 반환**
+
+---
+
+## 6. 추천 로직 구현 위치 (예정)
+
+```
+SurveyService.recommendation()
 ```
 
-응답:
+* 프론트엔드는 계산 로직을 절대 포함하지 않음
+* 모든 점수 계산 및 직무 매칭은 백엔드에서 처리
 
-```json
-{
-  "success": true,
-  "message": "설문이 정상적으로 접수되었습니다."
-}
+---
+
+## 7. 실행 방법
+
+```bash
+pnpm install
+pnpm run start:dev
 ```
 
----
-
-## 6. 향후 확장 계획
-
-### 1단계 (현재)
-
-* 설문 수집 API
-* DTO 기반 입력 검증
-
-### 2단계
-
-* 점수 계산 로직 분리 (SurveyResultService)
-* 설문 결과 해석 로직 추가
-
-### 3단계
-
-* DB 연동 (MongoDB 또는 PostgreSQL)
-* 설문 결과 저장
-* 사용자별 이력 관리
-
-### 4단계
-
-* 추천 알고리즘 도입
-* 직무/학습 경로 추천 API
+* 기본 포트: 3000
 
 ---
 
-## 7. 프론트엔드와의 관계
+## 8. 다음 구현 목표
 
-* 프론트엔드는 별도 레포지토리로 관리한다.
-* API 스펙은 본 README를 단일 진실 소스로 사용한다.
-* DTO 변경 시 반드시 README를 함께 수정한다.
+* 설문 옵션 → 직무 점수 매핑 테이블 설계
+* recommendation 로직 구현
+* 결과 JSON 스펙 확정
+* 테스트 코드 추가
 
 ---
+
+## 9. 설계 의도
+
+이 백엔드는 단순 설문 저장 서버가 아니라,
+
+> **설문 데이터를 기반으로 직무 적합도를 계산하는 분석 서버**
+
+를 목표로 설계되었습니다.
