@@ -5,7 +5,12 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors(); // 모든 출처의 요청을 허용
+  // CORS 설정을 더 명시적으로 변경하여 모든 요청을 허용
+  app.enableCors({
+    origin: true, // 모든 출처 허용
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // 인증 정보(쿠키 등) 허용
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -15,6 +20,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  // 서버 포트를 8080으로 변경하고 모든 인터페이스에서 수신
+  await app.listen(8080, '0.0.0.0');
 }
 bootstrap();
