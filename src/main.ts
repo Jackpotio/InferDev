@@ -6,9 +6,12 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // 1. CORS 활성화: 모든 출처에서의 요청을 허용합니다.
+  // 1. CORS 활성화: 특정 출처에서의 요청을 허용합니다.
   app.enableCors({
-    origin: true,
+    origin: [
+      'http://localhost:5173', // Vite
+      'http://localhost:3000', // CRA
+    ],
     credentials: true,
   });
 
