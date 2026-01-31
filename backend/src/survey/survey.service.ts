@@ -1,42 +1,30 @@
+
 import { Injectable } from '@nestjs/common';
+import { SurveyRepository } from './survey.repository';
 import { SubmitSurveyDto } from './dto/submit-survey.dto';
+import { Job } from './entities/job.entity';
+import { JobDetail } from './entities/job-detail.entity';
+import { SurveyQuestion } from './entities/survey-question.entity';
 
 @Injectable()
 export class SurveyService {
-  submitSurvey(dto: SubmitSurveyDto) {
-    const { scores } = dto;
+  constructor(private readonly surveyRepository: SurveyRepository) {}
 
-    const rankedThemes = this.buildRankedThemes(scores);
-    const { topTheme, maxScore } = this.extractMaxScore(rankedThemes);
-
-    return {
-      success: true,
-      result: {
-        rankedThemes,
-        topTheme,
-        maxScore,
-      },
-    };
+  async getJobs(): Promise<Job[]> {
+    return this.surveyRepository.findAllJobs();
   }
 
-  /* scores 객체를 점수 기준 내림차순으로 정렬 */
-  private buildRankedThemes(
-    scores: Record<string, number>,
-  ): { theme: string; score: number }[] {
-    return Object.entries(scores)
-      .map(([theme, score]) => ({ theme, score }))
-      .sort((a, b) => b.score - a.score);
+  async getJobDetails(): Promise<JobDetail[]> {
+    return this.surveyRepository.findAllJobDetails();
   }
 
-  /*랭킹 결과에서 최고 점수 및 대표 테마 추출 */
-  private extractMaxScore(rankedThemes: { theme: string; score: number }[]): {
-    topTheme: string;
-    maxScore: number;
-  } {
-    const top = rankedThemes[0];
-    return {
-      topTheme: top.theme,
-      maxScore: top.score,
-    };
+  async getSurveyQuestions(): Promise<SurveyQuestion[]> {
+    return this.surveyRepository.findAllSurveyQuestions();
+  }
+
+  recommendation(submitSurveyDto: SubmitSurveyDto) {
+    // TODO: Implement recommendation logic
+    console.log(submitSurveyDto);
+    return 'This is a mock recommendation.';
   }
 }

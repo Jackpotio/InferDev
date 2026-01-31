@@ -1,35 +1,34 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsObject,
-  IsNumber,
-  ValidateNested,
-} from 'class-validator';
+
+import { IsArray, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class AnswerDto {
+class Answer {
   @IsNumber()
   questionId: number;
 
   @IsNumber()
-  optionIndex: number;
+  optionId: number;
 }
 
 export class SubmitSurveyDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Answer)
+  answers: Answer[];
+
   @IsString()
-  @IsNotEmpty()
-  major: 'it' | 'non-it';
+  @IsIn(['it', 'non-it'])
+  major: string;
+
+  @IsString()
+  @IsOptional()
   itMajorDetail?: string;
 
   @IsString()
-  @IsNotEmpty()
-  codingExp: 'yes' | 'no';
-  codingLevel?: string;
+  @IsIn(['yes', 'no'])
+  codingExp: string;
 
-  @ValidateNested()
-  @Type(() => AnswerDto)
-  answer: AnswerDto[];
-/*key: 테마명 value: 점수*/
-  @IsObject()
-  scores: Record<string, number>;
+  @IsString()
+  @IsOptional()
+  codingLevel?: string;
 }
