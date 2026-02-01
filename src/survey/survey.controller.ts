@@ -17,6 +17,11 @@ export class SurveyController {
     return this.surveyService.getJobDetails();
   }
 
+  @Get('career-tracks')
+  getCareerTracks() {
+    return this.surveyService.getCareerTracks();
+  }
+
   @Get('survey-questions')
   getSurveyQuestions() {
     return this.surveyService.getSurveyQuestions();

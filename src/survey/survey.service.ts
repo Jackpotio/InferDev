@@ -4,6 +4,7 @@ import { SurveyRepository } from './survey.repository';
 import { SubmitSurveyDto } from './dto/submit-survey.dto';
 import { Job } from './entities/job.entity';
 import { JobDetail } from './entities/job-detail.entity';
+import { CareerTrack } from './entities/career-track.entity';
 import { SurveyQuestion } from './entities/survey-question.entity';
 
 @Injectable()
@@ -18,13 +19,15 @@ export class SurveyService {
     return this.surveyRepository.findAllJobDetails();
   }
 
+  async getCareerTracks(): Promise<CareerTrack[]> {
+    return this.surveyRepository.findAllCareerTracks();
+  }
+
   async getSurveyQuestions(): Promise<SurveyQuestion[]> {
     return this.surveyRepository.findAllSurveyQuestions();
   }
 
-  recommendation(submitSurveyDto: SubmitSurveyDto) {
-    // TODO: Implement recommendation logic
-    console.log(submitSurveyDto);
-    return 'This is a mock recommendation.';
+  async recommendation(submitSurveyDto: SubmitSurveyDto): Promise<any> {
+    return this.surveyRepository.submitSurvey(submitSurveyDto);
   }
 }

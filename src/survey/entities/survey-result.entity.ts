@@ -1,6 +1,7 @@
 
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, ManyToOne } from 'typeorm';
 import { SubmittedAnswer } from './submitted-answer.entity';
+import { Job } from './job.entity';
 
 @Entity()
 export class SurveyResult {
@@ -21,4 +22,10 @@ export class SurveyResult {
 
   @OneToMany(() => SubmittedAnswer, submittedAnswer => submittedAnswer.surveyResult, { cascade: true })
   submittedAnswers: SubmittedAnswer[];
+
+  @ManyToOne(() => Job, {
+    nullable: true,
+    eager: true, // Always load the recommendedJob relation
+  })
+  recommendedJob: Job;
 }

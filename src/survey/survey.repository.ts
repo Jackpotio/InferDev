@@ -9,6 +9,7 @@ import { SurveyQuestion } from './entities/survey-question.entity';
 import { SurveyOption } from './entities/survey-option.entity';
 import { Job } from './entities/job.entity';
 import { JobDetail } from './entities/job-detail.entity';
+import { CareerTrack } from './entities/career-track.entity';
 
 @Injectable()
 export class SurveyRepository {
@@ -25,42 +26,76 @@ export class SurveyRepository {
     private readonly jobRepository: Repository<Job>,
     @InjectRepository(JobDetail)
     private readonly jobDetailRepository: Repository<JobDetail>,
+    @InjectRepository(CareerTrack)
+    private readonly careerTrackRepository: Repository<CareerTrack>,
   ) {}
 
-  async submitSurvey(submitSurveyDto: SubmitSurveyDto): Promise<SurveyResult> {
+  async submitSurvey(submitSurveyDto: SubmitSurveyDto): Promise<any> {
     const { userId, answers } = submitSurveyDto;
+
+    const jobScores: { [key: string]: number } = {};
+    const allJobs = await this.jobRepository.find();
+    allJobs.forEach(job => {
+      jobScores[job.id] = 0;
+    });
 
     let totalScore = 0;
     const submittedAnswers: SubmittedAnswer[] = [];
 
     for (const answer of answers) {
       const { questionId, optionId } = answer;
-      const question = await this.surveyQuestionRepository.findOne({ where: { id: questionId } });
-      const option = await this.surveyOptionRepository.findOne({ where: { id: optionId } });
+      const option = await this.surveyOptionRepository.findOne({ 
+        where: { id: optionId },
+        relations: ['question', 'question.options'] // Eagerly load relations
+      });
 
-      if (question && option) {
-        const newSubmittedAnswer = this.submittedAnswerRepository.create({
-          surveyQuestion: question,
-          surveyOption: option,
+      if (option) {
+        totalScore += option.score;
+        for (const key in option.subfieldScores) {
+            if (jobScores.hasOwnProperty(key)) {
+                jobScores[key] += option.subfieldScores[key];
+            }
+        }
+
+        const question = await this.surveyQuestionRepository.findOne({ 
+          where: { id: questionId },
+          relations: ['options'] // Eagerly load relations
         });
-        submittedAnswers.push(newSubmittedAnswer);
-
-        for (const key in option.score) {
-          if (Object.prototype.hasOwnProperty.call(option.score, key)) {
-            totalScore += option.score[key];
-          }
+        if (question) {
+            const newSubmittedAnswer = this.submittedAnswerRepository.create({
+                surveyQuestion: question,
+                surveyOption: option,
+            });
+            submittedAnswers.push(newSubmittedAnswer);
         }
       }
     }
 
+    let topJobId = '';
+    let maxScore = -1;
+    for (const jobId in jobScores) {
+      if (jobScores[jobId] > maxScore) {
+        maxScore = jobScores[jobId];
+        topJobId = jobId;
+      }
+    }
+
+    const recommendedJob = await this.jobRepository.findOne({ where: { id: topJobId } });
+
     const newSurveyResult = this.surveyResultRepository.create({
       userId,
       totalScore,
-      resultSummary: ' ',
+      resultSummary: JSON.stringify(jobScores),
       submittedAnswers,
+      recommendedJob: recommendedJob || undefined,
     });
 
-    return this.surveyResultRepository.save(newSurveyResult);
+    await this.surveyResultRepository.save(newSurveyResult);
+
+    return {
+      topJob: topJobId,
+      scores: jobScores,
+    };
   }
 
   async findAllJobs(): Promise<Job[]> {
@@ -69,6 +104,10 @@ export class SurveyRepository {
 
   async findAllJobDetails(): Promise<JobDetail[]> {
     return this.jobDetailRepository.find();
+  }
+
+  async findAllCareerTracks(): Promise<CareerTrack[]> {
+    return this.careerTrackRepository.find();
   }
 
   async findAllSurveyQuestions(): Promise<SurveyQuestion[]> {

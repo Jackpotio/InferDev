@@ -2,10 +2,14 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { Job } from './job.entity';
 
-@Entity()
+@Entity('JobDetail')
 export class JobDetail {
   @PrimaryColumn()
-  job_id: string;
+  jobId: string;
+
+  @OneToOne(() => Job, { primary: true })
+  @JoinColumn({ name: 'jobId' })
+  job: Job;
 
   @Column()
   title: string;
@@ -13,13 +17,12 @@ export class JobDetail {
   @Column()
   img: string;
 
-  @Column('jsonb')
+  @Column('simple-array')
   subfields: string[];
 
-  @Column('jsonb')
-  similarJobs: string[];
+  @Column('simple-array')
+  strengths: string[];
 
-  @OneToOne(() => Job)
-  @JoinColumn({ name: 'job_id' })
-  job: Job;
+  @Column('simple-array')
+  similarJobs: string[];
 }
