@@ -2,7 +2,7 @@
 import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
 import { Job } from './job.entity';
 
-@Entity('CareerTrack')
+@Entity('career_track')
 export class CareerTrack {
   @PrimaryColumn()
   id: string;

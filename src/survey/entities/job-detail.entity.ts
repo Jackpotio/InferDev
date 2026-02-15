@@ -2,12 +2,12 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { Job } from './job.entity';
 
-@Entity('JobDetail')
+@Entity('job_detail')
 export class JobDetail {
   @PrimaryColumn()
   jobId: string;
 
-  @OneToOne(() => Job, { primary: true })
+  @OneToOne(() => Job, job => job.detail, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'jobId' })
   job: Job;
 

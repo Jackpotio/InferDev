@@ -18,9 +18,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [__dirname + '//**/*.entity.js'],
-        synchronize: configService.get<string>('NODE_ENV') === 'development',
+        synchronize: true,
         // 데이터베이스 스키마를 강제로 재생성하기 위해 dropSchema 옵션 다시 추가
-        dropSchema: configService.get<string>('NODE_ENV') === 'development',
+        dropSchema: true,
         logging: configService.get<string>('NODE_ENV') === 'development',
         ssl: { rejectUnauthorized: false },
       }),

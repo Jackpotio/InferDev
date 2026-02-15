@@ -1,9 +1,9 @@
 
-import { Entity, PrimaryColumn, Column, ManyToOne, OneToOne } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 import { CareerTrack } from './career-track.entity';
 import { JobDetail } from './job-detail.entity';
 
-@Entity('Job')
+@Entity('job')
 export class Job {
   @PrimaryColumn()
   id: string;
@@ -11,11 +11,9 @@ export class Job {
   @Column()
   name: string;
 
-  @ManyToOne(() => CareerTrack, (track) => track.jobs)
+  @ManyToOne(() => CareerTrack, (track) => track.jobs, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'trackId' })
   track: CareerTrack;
-
-  @Column()
-  trackId: string;
 
   @OneToOne(() => JobDetail, (jobDetail) => jobDetail.job)
   detail: JobDetail;
