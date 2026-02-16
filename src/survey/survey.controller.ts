@@ -1,5 +1,5 @@
 
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { SurveyService } from './survey.service';
 import { SubmitSurveyDto } from './dto/submit-survey.dto';
 
@@ -23,12 +23,25 @@ export class SurveyController {
   }
 
   @Get('survey-questions')
-  getSurveyQuestions() {
-    return this.surveyService.getSurveyQuestions();
+  getSurveyQuestions(
+    @Query('stage') stage?: string,
+    @Query('track') track?: string,
+  ) {
+    return this.surveyService.getSurveyQuestions(stage ? Number(stage) : 1, track);
   }
 
   @Post('recommendation')
   recommendation(@Body() submitSurveyDto: SubmitSurveyDto) {
     return this.surveyService.recommendation(submitSurveyDto);
+  }
+
+  @Post('recommendation/stage1')
+  recommendationStage1(@Body() submitSurveyDto: SubmitSurveyDto) {
+    return this.surveyService.recommendationStage1(submitSurveyDto);
+  }
+
+  @Post('recommendation/final')
+  recommendationFinal(@Body() submitSurveyDto: SubmitSurveyDto) {
+    return this.surveyService.recommendationFinal(submitSurveyDto);
   }
 }

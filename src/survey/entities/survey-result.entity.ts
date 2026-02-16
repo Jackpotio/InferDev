@@ -14,8 +14,8 @@ export class SurveyResult {
   @Column()
   totalScore: number;
 
-  @Column()
-  resultSummary: string;
+  @Column({ type: 'jsonb', nullable: true })
+  resultSummary: any;
 
   @CreateDateColumn()
   submittedAt: Date;

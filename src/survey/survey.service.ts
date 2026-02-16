@@ -23,13 +23,19 @@ export class SurveyService {
     return this.surveyRepository.findAllCareerTracks();
   }
 
-  async getSurveyQuestions(): Promise<SurveyQuestion[]> {
-    const count = await this.surveyRepository.countSurveyQuestions();
-    console.log("Survey count from server:", count);
-    return this.surveyRepository.findAllSurveyQuestions();
+  async getSurveyQuestions(stage = 1, track?: string): Promise<SurveyQuestion[]> {
+    return this.surveyRepository.findAllSurveyQuestions(stage, track);
   }
 
   async recommendation(submitSurveyDto: SubmitSurveyDto): Promise<any> {
     return this.surveyRepository.submitSurvey(submitSurveyDto);
+  }
+
+  async recommendationStage1(submitSurveyDto: SubmitSurveyDto): Promise<any> {
+    return this.surveyRepository.submitStage1(submitSurveyDto);
+  }
+
+  async recommendationFinal(submitSurveyDto: SubmitSurveyDto): Promise<any> {
+    return this.surveyRepository.submitFinal(submitSurveyDto);
   }
 }
