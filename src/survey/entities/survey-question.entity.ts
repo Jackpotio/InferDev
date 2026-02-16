@@ -13,6 +13,8 @@ export class SurveyQuestion {
   @Column('jsonb', { nullable: true })
   condition: any;
 
-  @OneToMany(() => SurveyOption, option => option.question)
+  @OneToMany(() => SurveyOption, option => option.question, {
+    cascade: true,
+  })
   options: SurveyOption[];
 }

@@ -113,4 +113,8 @@ export class SurveyRepository {
   async findAllSurveyQuestions(): Promise<SurveyQuestion[]> {
     return this.surveyQuestionRepository.find({ relations: ['options'] });
   }
+
+  async countSurveyQuestions(): Promise<number> {
+    return this.surveyQuestionRepository.count();
+  }
 }

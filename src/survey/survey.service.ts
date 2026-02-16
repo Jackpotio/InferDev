@@ -24,6 +24,8 @@ export class SurveyService {
   }
 
   async getSurveyQuestions(): Promise<SurveyQuestion[]> {
+    const count = await this.surveyRepository.countSurveyQuestions();
+    console.log("Survey count from server:", count);
     return this.surveyRepository.findAllSurveyQuestions();
   }
 
