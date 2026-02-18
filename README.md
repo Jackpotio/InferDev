@@ -1,137 +1,189 @@
 # InferDev Backend (NestJS)
 
-IT 진로 적성검사 서비스 **InferDev**의 백엔드 서버입니다.
-설문 데이터 제공, 사용자 응답 수집, 진로 추천 결과 계산을 담당합니다.
+InferDev의 백엔드 서버입니다.  
+설문 데이터/추천 로직, 인증(JWT + Google OAuth), 프로필 설정 API를 제공합니다.
 
 ---
 
-## 1. 현재 개발 상태 요약
+## 1. 현재 구현 상태
 
-✅ NestJS 기본 구조 구성 완료
-✅ PostgreSQL Entity 설계 완료
-✅ 설문/직무/옵션 조회 API 구현 완료
-⚠️ 추천(점수 계산) 로직은 **미구현 (Mock 단계)**
+- 설문/추천 API 구현 완료 (stage1, final 분리 계산)
+- JWT 로컬 인증 구현 완료 (`register`, `login`, `me`)
+- Google OAuth 로그인 연동 완료 (JWT 발급 통합)
+- 프로필 설정 API 구현 완료 (알림/표시 이름/플랜)
+- TypeORM Migration 체계 적용 완료 (`synchronize: false`)
+- Naver OAuth는 코드 골격만 있고 현재 비활성 상태
 
 ---
 
 ## 2. 기술 스택
 
-* NestJS
-* TypeScript
-* PostgreSQL
-* TypeORM (Repository 패턴)
-* class-validator / class-transformer
+- NestJS 10
+- TypeScript
+- PostgreSQL
+- TypeORM
+- Passport (`jwt`, `google-oauth20`)
+- bcryptjs
+- class-validator / class-transformer
 
 ---
 
-## 3. 프로젝트 구조
+## 3. 핵심 모듈 구조
 
-```
+```txt
 src/
  ├─ app.module.ts
  ├─ main.ts
- ├─ survey/
- │  ├─ survey.controller.ts   # API 엔드포인트
- │  ├─ survey.service.ts      # 비즈니스 로직 (추천 로직 예정)
- │  ├─ survey.repository.ts   # DB 접근 계층
+ ├─ auth/
+ │  ├─ auth.controller.ts
+ │  ├─ auth.service.ts
+ │  ├─ auth.module.ts
+ │  ├─ jwt.strategy.ts
+ │  ├─ jwt-auth.guard.ts
  │  ├─ dto/
- │  │  └─ submit-survey.dto.ts
- │  └─ entities/
- │     ├─ job.entity.ts
- │     ├─ job-detail.entity.ts
- │     ├─ survey-question.entity.ts
- │     ├─ survey-option.entity.ts
- │     ├─ submitted-answer.entity.ts
- │     └─ survey-result.entity.ts
+ │  │  ├─ login.dto.ts
+ │  │  ├─ register.dto.ts
+ │  │  └─ update-profile.dto.ts
+ │  ├─ guards/
+ │  │  ├─ google-auth.guard.ts
+ │  │  └─ naver-auth.guard.ts
+ │  └─ strategies/
+ │     ├─ google.strategy.ts
+ │     └─ naver.strategy.ts
+ ├─ users/
+ │  ├─ user.entity.ts
+ │  ├─ users.service.ts
+ │  └─ users.module.ts
+ ├─ survey/
+ │  ├─ survey.controller.ts
+ │  ├─ survey.service.ts
+ │  ├─ survey.repository.ts
+ │  ├─ dto/submit-survey.dto.ts
+ │  └─ entities/*.entity.ts
+ └─ database/
+    ├─ data-source.ts
+    ├─ migrations/
+    └─ seeds/
 ```
 
 ---
 
-## 4. Entity 설계 현황
+## 4. 인증/프로필 API
 
-### Job
+기본 prefix: `/api`
 
-* IT 직무(Frontend, Backend, AI 등)를 표현
+### Auth
 
-### JobDetail
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me` (JWT 필요)
 
-* 직무 상세 설명, 이미지, 유사 직무 정보
+### Google OAuth
 
-### SurveyQuestion
+- `GET /api/auth/google`
+- `GET /api/auth/google/redirect`
 
-* 설문 질문
-* 조건부 질문(전공, 경험 등)을 고려한 확장 구조
+성공 시 프론트로 리다이렉트:
+- `${FRONTEND_URL}/oauth/callback#token=<jwt>`
 
-### SurveyOption
+### Profile (JWT 필요)
 
-* 질문에 대한 선택지
-* 향후 점수 매핑 예정
+- `GET /api/auth/profile`
+- `POST /api/auth/profile`
 
-### SubmittedAnswer
-
-* 사용자의 질문-선택지 응답 기록
-
-### SurveyResult
-
-* 최종 추천 결과 저장용 (확장 대비)
-
----
-
-## 5. API 엔드포인트
-
-### 조회 API
-
-| Method | Endpoint          | Description |
-| ------ | ----------------- | ----------- |
-| GET    | /jobs             | 직무 목록 조회    |
-| GET    | /job-details      | 직무 상세 정보 조회 |
-| GET    | /survey-questions | 설문 질문 조회    |
-
-### 추천 API
-
-| Method | Endpoint        | Description         |
-| ------ | --------------- | ------------------- |
-| POST   | /recommendation | 설문 응답 제출 및 추천 결과 반환 |
-
-⚠️ 현재 `/recommendation` 은 **mock 문자열만 반환**
+프로필 응답 예시 필드:
+- `displayName`
+- `notifyResultSaved`
+- `notifyPremium`
+- `plan`
+- `account.email`
+- `account.providerLabel`
+- `account.joinedAt`
 
 ---
 
-## 6. 추천 로직 구현 위치 (예정)
+## 5. 설문/추천 API
 
+- `GET /api/jobs`
+- `GET /api/job-details`
+- `GET /api/career-tracks`
+- `GET /api/survey-questions?stage=1|2&track=<id>`
+- `POST /api/recommendation/stage1`
+- `POST /api/recommendation/final`
+- `POST /api/recommendation` (호환용)
+
+---
+
+## 6. DB 및 마이그레이션
+
+`src/database/migrations` 기준 운영.
+
+주요 마이그레이션:
+- `CreateUsersTable1760000000000`
+- `AddOAuthColumnsToUsers1760000001000`
+- `AddProfileSettingsToUsers1760000002000`
+
+실행:
+
+```bash
+pnpm run migration:run
 ```
-SurveyService.recommendation()
-```
-
-* 프론트엔드는 계산 로직을 절대 포함하지 않음
-* 모든 점수 계산 및 직무 매칭은 백엔드에서 처리
 
 ---
 
-## 7. 실행 방법
+## 7. 환경변수
+
+필수:
+
+- `JWT_SECRET`
+- `SESSION_SECRET`
+- `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`
+- `FRONTEND_URL`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`
+
+선택:
+
+- `JWT_EXPIRES_IN` (default: `30m`)
+- `BCRYPT_ROUNDS` (default: `10`)
+- `NODE_ENV`
+
+---
+
+## 8. 실행 방법
 
 ```bash
 pnpm install
+pnpm run migration:run
 pnpm run start:dev
 ```
 
-* 기본 포트: 3000
+기본 포트: `3000`
 
 ---
 
-## 8. 다음 구현 목표
+## 9. 앞으로의 설계/구현 방향
 
-* 설문 옵션 → 직무 점수 매핑 테이블 설계
-* recommendation 로직 구현
-* 결과 JSON 스펙 확정
-* 테스트 코드 추가
+### 단기
+
+- Naver OAuth 재활성화 (환경변수/콘솔 설정 후 provider 등록)
+- 설문 결과 저장 API에 `req.user.userId` 강제 적용 (`userId` body 의존 제거)
+- 프로필/알림 API 스펙 고정 및 e2e 테스트 추가
+
+### 중기
+
+- Refresh Token 도입 및 토큰 재발급 정책 정리
+- 알림 저장소 DB 테이블 분리 (`notifications`) + 읽음/전체읽음 API
+- 관리자 RBAC API 확장 (`RolesGuard` 실제 적용)
+
+### 운영 안정화
+
+- OAuth state/세션 저장소 Redis 전환
+- 보안 헤더/로그 마스킹/Rate Limit 적용
+- CI에서 migration + test 자동 검증
 
 ---
 
-## 9. 설계 의도
+## 10. 참고
 
-이 백엔드는 단순 설문 저장 서버가 아니라,
-
-> **설문 데이터를 기반으로 직무 적합도를 계산하는 분석 서버**
-
-를 목표로 설계되었습니다.
+- 현재 인증은 `JWT access token` 중심이며, 쿠키 기반 세션 로그인은 미도입 상태입니다.
+- Naver는 추후 재활성화 예정이며, 구글 기준으로 인증 흐름을 먼저 안정화한 상태입니다.

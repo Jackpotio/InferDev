@@ -9,17 +9,41 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const isProduction = configService.get<string>('NODE_ENV') === 'production';
-  const frontendUrl = configService.get<string>('FRONTEND_URL');
-  const corsOrigins = [
+  const frontendUrl = configService.get<string>('FRONTEND_URL') || '';
+  const frontendUrls = (configService.get<string>('FRONTEND_URLS') || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+  const allowedOrigins = new Set<string>([
     frontendUrl,
-    'http://localhost:5173', // Vite
-    'http://localhost:3000', // CRA (legacy)
-    'http://localhost:3001', // CRA (current)
-  ].filter((value): value is string => !!value);
+    ...frontendUrls,
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://inferdev.kr',
+    'https://www.inferdev.kr',
+  ]);
+  const cloudWorkstationsOriginPattern =
+    /^https:\/\/\d+-firebase-inferdev-.*\.cloudworkstations\.dev$/;
+  const inferdevOriginPattern = /^https:\/\/([a-z0-9-]+\.)?inferdev\.kr$/i;
 
   // 1. CORS 활성화: 특정 출처에서의 요청을 허용합니다.
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (
+        allowedOrigins.has(origin) ||
+        cloudWorkstationsOriginPattern.test(origin) ||
+        inferdevOriginPattern.test(origin)
+      ) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`CORS blocked for origin: ${origin}`), false);
+    },
     credentials: true,
   });
 

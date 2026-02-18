@@ -9,6 +9,7 @@ import {
 export type UserRole = 'user' | 'admin';
 export type AuthProvider = 'local' | 'google' | 'naver';
 export type UserPlan = 'free' | 'premium';
+export type UserGender = 'male' | 'female' | 'other' | 'unspecified';
 
 @Entity('users')
 export class User {
@@ -29,6 +30,9 @@ export class User {
 
   @Column({ name: 'display_name', nullable: true })
   displayName: string | null;
+
+  @Column({ name: 'gender', type: 'varchar', nullable: true })
+  gender: UserGender | null;
 
   @Column({ name: 'notify_result_saved', type: 'boolean', default: true })
   notifyResultSaved: boolean;

@@ -52,8 +52,35 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Req() req: { user: { userId: number; email: string | null; role: string } }) {
-    return req.user;
+  async me(
+    @Req()
+    req: {
+      user: {
+        userId: number;
+        email: string | null;
+        role: string;
+        provider?: 'local' | 'google' | 'naver';
+        joinedAt?: string | null;
+      };
+    },
+  ) {
+    let dbUser = null;
+    try {
+      dbUser = await this.usersService.findById(req.user.userId);
+    } catch {
+      return req.user;
+    }
+
+    if (!dbUser) {
+      return req.user;
+    }
+
+    return {
+      ...req.user,
+      email: dbUser.email,
+      provider: dbUser.provider,
+      joinedAt: dbUser.createdAt ? dbUser.createdAt.toISOString() : null,
+    };
   }
 
   @UseGuards(JwtAuthGuard)

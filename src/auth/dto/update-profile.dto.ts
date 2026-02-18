@@ -7,6 +7,10 @@ export class UpdateProfileDto {
   displayName?: string;
 
   @IsOptional()
+  @IsIn(['male', 'female', 'other', 'unspecified', ''])
+  gender?: 'male' | 'female' | 'other' | 'unspecified' | '';
+
+  @IsOptional()
   @IsBoolean()
   notifyResultSaved?: boolean;
 

@@ -52,6 +52,8 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role as UserRole,
+      provider: user.provider,
+      joinedAt: user.createdAt ? user.createdAt.toISOString() : null,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -63,6 +65,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         provider: user.provider,
+        joinedAt: user.createdAt ? user.createdAt.toISOString() : null,
       },
     };
   }

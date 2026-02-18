@@ -7,6 +7,8 @@ type JwtPayload = {
   sub: number;
   email: string | null;
   role: 'user' | 'admin';
+  provider?: 'local' | 'google' | 'naver';
+  joinedAt?: string | null;
 };
 
 @Injectable()
@@ -24,6 +26,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userId: payload.sub,
       email: payload.email,
       role: payload.role,
+      provider: payload.provider,
+      joinedAt: payload.joinedAt ?? null,
     };
   }
 }
