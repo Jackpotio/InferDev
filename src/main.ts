@@ -2,18 +2,42 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  const corsOrigins = [
+    frontendUrl,
+    'http://localhost:5173', // Vite
+    'http://localhost:3000', // CRA (legacy)
+    'http://localhost:3001', // CRA (current)
+  ].filter((value): value is string => !!value);
 
   // 1. CORS 활성화: 특정 출처에서의 요청을 허용합니다.
   app.enableCors({
-    origin: [
-      'http://localhost:5173', // Vite
-      'http://localhost:3000', // CRA
-    ],
+    origin: corsOrigins,
     credentials: true,
   });
+
+  // OAuth state 검증은 세션 저장소를 필요로 합니다.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  app.use(
+    session({
+      secret: configService.getOrThrow<string>('SESSION_SECRET'),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000,
+      },
+    }),
+  );
 
   // 2. API 전역 접두사 설정: 모든 API 경로 앞에 /api가 붙습니다.
   app.setGlobalPrefix('api');

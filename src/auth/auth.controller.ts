@@ -1,0 +1,61 @@
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
+import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { JwtAuthGuard } from './jwt-auth.guard';
+
+@Controller('auth')
+export class AuthController {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  @Post('register')
+  register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto.email, registerDto.password);
+  }
+
+  @Post('login')
+  login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto.email, loginDto.password);
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  googleLogin() {
+    return;
+  }
+
+  @Get('google/redirect')
+  @UseGuards(GoogleAuthGuard)
+  async googleRedirect(
+    @Req() req: {
+      user: {
+        provider: 'google';
+        providerUserId: string;
+        email?: string | null;
+        displayName?: string | null;
+      };
+    },
+    @Res() res: Response,
+  ) {
+    const { accessToken } = await this.authService.validateOAuthLogin(req.user);
+    return res.redirect(this.buildFrontendOAuthRedirectUrl(accessToken));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  me(@Req() req: { user: { userId: number; email: string | null; role: string } }) {
+    return req.user;
+  }
+
+  private buildFrontendOAuthRedirectUrl(accessToken: string): string {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const normalized = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl;
+    return `${normalized}/oauth/callback#token=${encodeURIComponent(accessToken)}`;
+  }
+}

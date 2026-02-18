@@ -10,8 +10,9 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_DATABASE,
 
   entities: [__dirname + '/../**/*.entity.{ts,js}'],
+  migrations: [__dirname + '/migrations/*.{ts,js}'],
 
-  synchronize: process.env.NODE_ENV === 'development',
+  synchronize: false,
   logging: process.env.NODE_ENV === 'development',
 
   // GCP SSL 연결 옵션
