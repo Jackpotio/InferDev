@@ -8,6 +8,7 @@ import {
 
 export type UserRole = 'user' | 'admin';
 export type AuthProvider = 'local' | 'google' | 'naver';
+export type UserPlan = 'free' | 'premium';
 
 @Entity('users')
 export class User {
@@ -28,6 +29,15 @@ export class User {
 
   @Column({ name: 'display_name', nullable: true })
   displayName: string | null;
+
+  @Column({ name: 'notify_result_saved', type: 'boolean', default: true })
+  notifyResultSaved: boolean;
+
+  @Column({ name: 'notify_premium', type: 'boolean', default: false })
+  notifyPremium: boolean;
+
+  @Column({ name: 'plan', type: 'varchar', default: 'free' })
+  plan: UserPlan;
 
   @Column({ name: 'role', type: 'varchar', default: 'user' })
   role: UserRole;

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthProvider, User } from './user.entity';
@@ -36,6 +36,31 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { provider, providerUserId } });
   }
 
+  findById(id: number): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
+  }
+
+  private formatProviderLabel(provider: AuthProvider): string {
+    if (provider === 'google') return 'Google';
+    if (provider === 'naver') return 'Naver';
+    return '일반 이메일';
+  }
+
+  private formatProfileResponse(user: User) {
+    return {
+      displayName: user.displayName ?? '',
+      notifyResultSaved: user.notifyResultSaved,
+      notifyPremium: user.notifyPremium,
+      plan: user.plan,
+      account: {
+        email: user.email ?? '',
+        provider: user.provider,
+        providerLabel: this.formatProviderLabel(user.provider),
+        joinedAt: user.createdAt,
+      },
+    };
+  }
+
   async upsertOAuthUser(input: {
     provider: Exclude<AuthProvider, 'local'>;
     providerUserId: string;
@@ -59,5 +84,49 @@ export class UsersService {
     });
 
     return this.usersRepository.save(user);
+  }
+
+  async getProfileSettings(userId: number) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.formatProfileResponse(user);
+  }
+
+  async updateProfileSettings(
+    userId: number,
+    input: {
+      displayName?: string;
+      notifyResultSaved?: boolean;
+      notifyPremium?: boolean;
+      plan?: 'free' | 'premium';
+    },
+  ) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (input.displayName !== undefined) {
+      user.displayName = input.displayName.trim() || null;
+    }
+    if (input.notifyResultSaved !== undefined) {
+      user.notifyResultSaved = input.notifyResultSaved;
+    }
+    if (input.notifyPremium !== undefined) {
+      user.notifyPremium = input.notifyPremium;
+    }
+    if (input.plan !== undefined) {
+      user.plan = input.plan;
+    }
+
+    await this.usersRepository.save(user);
+    const updated = await this.findById(userId);
+    if (!updated) {
+      throw new NotFoundException('User not found');
+    }
+    return this.formatProfileResponse(updated);
   }
 }

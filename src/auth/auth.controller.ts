@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
@@ -12,6 +14,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Post('register')
@@ -51,6 +54,21 @@ export class AuthController {
   @Get('me')
   me(@Req() req: { user: { userId: number; email: string | null; role: string } }) {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Req() req: { user: { userId: number } }) {
+    return this.usersService.getProfileSettings(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('profile')
+  updateProfile(
+    @Req() req: { user: { userId: number } },
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.usersService.updateProfileSettings(req.user.userId, updateProfileDto);
   }
 
   private buildFrontendOAuthRedirectUrl(accessToken: string): string {
